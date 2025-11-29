@@ -1,0 +1,125 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.*;
+
+class InvalidMatrixSizeException extends ArithmeticException {
+    public InvalidMatrixSizeException(String message) {
+        super(message);
+    }
+}
+
+public class lab6_Task2 extends JFrame {
+    private JButton loadButton, calculateButton;
+    private JTable tableA, tableB, tableX;
+    private DefaultTableModel modelA, modelB, modelX;
+    private int[][] A, B;
+    private int n;
+
+    public lab6_Task2() {
+        super("Матриці та вектор X");
+        setLayout(new BorderLayout());
+
+        JPanel topPanel = new JPanel();
+        loadButton = new JButton("Завантажити матриці з файлу");
+        calculateButton = new JButton("Обчислити X");
+        calculateButton.setEnabled(false);
+        topPanel.add(loadButton);
+        topPanel.add(calculateButton);
+        add(topPanel, BorderLayout.NORTH);
+
+        // Створюємо три таблиці для A, B і X
+        modelA = new DefaultTableModel();
+        tableA = new JTable(modelA);
+        modelB = new DefaultTableModel();
+        tableB = new JTable(modelB);
+        modelX = new DefaultTableModel();
+        tableX = new JTable(modelX);
+
+        JPanel tablesPanel = new JPanel(new GridLayout(1, 3));
+        tablesPanel.add(new JScrollPane(tableA));
+        tablesPanel.add(new JScrollPane(tableB));
+        tablesPanel.add(new JScrollPane(tableX));
+        add(tablesPanel, BorderLayout.CENTER);
+
+        loadButton.addActionListener(e -> loadMatrices());
+        calculateButton.addActionListener(e -> calculateX());
+
+        setSize(900, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private void loadMatrices() {
+        JFileChooser fileChooser = new JFileChooser();
+        int option = fileChooser.showOpenDialog(this);
+        if(option == JFileChooser.APPROVE_OPTION){
+            File file = fileChooser.getSelectedFile();
+            try (Scanner sc = new Scanner(file)) {
+                n = sc.nextInt();
+                if(n <= 0 || n > 20) throw new InvalidMatrixSizeException("Розмір n повинен бути від 1 до 20");
+
+                A = new int[n][n];
+                B = new int[n][n];
+
+                for(int i = 0; i < n; i++)
+                    for(int j = 0; j < n; j++)
+                        A[i][j] = sc.nextInt();
+
+                for(int i = 0; i < n; i++)
+                    for(int j = 0; j < n; j++)
+                        B[i][j] = sc.nextInt();
+
+                // Заповнюємо таблиці A і B
+                fillTable(modelA, A);
+                fillTable(modelB, B);
+
+                JOptionPane.showMessageDialog(this, "Матриці успішно завантажено!");
+                calculateButton.setEnabled(true);
+
+            } catch (FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(this, "Файл не знайдено!");
+            } catch (InputMismatchException ex) {
+                JOptionPane.showMessageDialog(this, "Невірний формат даних у файлі!");
+            } catch (InvalidMatrixSizeException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage());
+            }
+        }
+    }
+
+    private void fillTable(DefaultTableModel model, int[][] matrix) {
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        for(int i = 0; i < n; i++)
+            model.addColumn("C" + i);
+        for(int i = 0; i < n; i++)
+            model.addRow(Arrays.stream(matrix[i]).boxed().toArray());
+    }
+
+    private void calculateX() {
+        int[] X = new int[n];
+        for(int i = 0; i < n; i++) {
+            int countA = 0, countB = 0;
+            for(int j = 0; j < n; j++){
+                if(A[i][j] < 0) countA++;
+                if(B[i][j] < 0) countB++;
+            }
+            X[i] = (countA == countB) ? 1 : 0;
+        }
+
+        // Відображаємо вектор X у таблиці
+        modelX.setRowCount(0);
+        modelX.setColumnCount(0);
+        modelX.addColumn("Індекс i");
+        modelX.addColumn("X[i]");
+        for(int i = 0; i < n; i++){
+            modelX.addRow(new Object[]{i, X[i]});
+        }
+    }
+
+    public static void main(String[] args) {
+        new lab6_Task2();
+    }
+}
