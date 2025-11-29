@@ -1,0 +1,81 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Calendar;
+
+public class lab6 extends JFrame {
+    private int hour, minute;
+    private ClockPanel clockPanel;
+
+    public lab6() {
+        super("Аналоговий годинник");
+
+        // Початковий час — поточний
+        Calendar c = Calendar.getInstance();
+        hour = c.get(Calendar.HOUR_OF_DAY);
+        minute = c.get(Calendar.MINUTE);
+
+        clockPanel = new ClockPanel();
+        add(clockPanel, BorderLayout.CENTER);
+
+        JPanel buttons = new JPanel();
+        JButton incHour = new JButton("Година +");
+        JButton decHour = new JButton("Година -");
+        JButton incMinute = new JButton("Хвилина +");
+        JButton decMinute = new JButton("Хвилина -");
+
+        buttons.add(incHour);
+        buttons.add(decHour);
+        buttons.add(incMinute);
+        buttons.add(decMinute);
+
+        add(buttons, BorderLayout.SOUTH);
+
+        incHour.addActionListener(e -> { hour = (hour + 1) % 24; clockPanel.repaint(); });
+        decHour.addActionListener(e -> { hour = (hour + 23) % 24; clockPanel.repaint(); });
+        incMinute.addActionListener(e -> { minute = (minute + 1) % 60; clockPanel.repaint(); });
+        decMinute.addActionListener(e -> { minute = (minute + 59) % 60; clockPanel.repaint(); });
+
+        setSize(400, 450);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    class ClockPanel extends JPanel {
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            int w = getWidth();
+            int h = getHeight();
+            int radius = Math.min(w, h) / 2 - 50;
+
+            int cx = w / 2;
+            int cy = h / 2;
+
+            g.drawOval(cx - radius, cy - radius, 2 * radius, 2 * radius);
+
+            for (int i = 0; i < 12; i++) {
+                double angle = Math.toRadians(i * 30 - 90);
+                int x1 = (int)(cx + (radius - 10) * Math.cos(angle));
+                int y1 = (int)(cy + (radius - 10) * Math.sin(angle));
+                int x2 = (int)(cx + radius * Math.cos(angle));
+                int y2 = (int)(cy + radius * Math.sin(angle));
+                g.drawLine(x1, y1, x2, y2);
+            }
+
+            double hourAngle = Math.toRadians((hour % 12 + minute / 60.0) * 30 - 90);
+            int hx = (int)(cx + (radius - 60) * Math.cos(hourAngle));
+            int hy = (int)(cy + (radius - 60) * Math.sin(hourAngle));
+            g.drawLine(cx, cy, hx, hy);
+
+            double minuteAngle = Math.toRadians(minute * 6 - 90);
+            int mx = (int)(cx + (radius - 30) * Math.cos(minuteAngle));
+            int my = (int)(cy + (radius - 30) * Math.sin(minuteAngle));
+            g.drawLine(cx, cy, mx, my);
+        }
+    }
+
+    public static void main(String[] args) {
+        new lab6();
+    }
+}
